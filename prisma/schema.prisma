@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  Id         Int       @id @default(autoincrement())
+  Email      String?   @unique @db.VarChar(255)
+  Name       String    @db.VarChar(255)
+  Created_at DateTime  @default(now()) @db.Timestamp(0)
+  Tickets    Tickets[]
+}
+
+model Tickets {
+  Id            Int                     @id @default(autoincrement())
+  Description   String?                 @db.VarChar(255)
+  Subject       String                  @db.VarChar(255)
+  Status        ticket_table_2_Status   @default(Open)
+  Priority      ticket_table_2_Priority @default(Low)
+  Type          ticket_table_2_Type     @default(Ticket)
+  Created_at    DateTime                @default(now()) @db.Timestamp(0)
+  Updated_at    DateTime?               @default(now()) @db.DateTime(0)
+  Notes         String?                 @db.VarChar(255)
+  Assigned_to   Int
+  Assigned_user User                    @relation(fields: [Assigned_to], references: [Id])
+}
+
+enum ticket_table_2_Status {
+  Open
+  progress
+  Hold
+  Closed
+}
+
+enum ticket_table_2_Priority {
+  Low
+  Medium
+  High
+}
+
+enum ticket_table_2_Type {
+  Ticket
+  Problem
+  Question
+}
