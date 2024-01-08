@@ -1,7 +1,7 @@
 //import { strict } from "assert";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient(); // {log: ["query"]}
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 const app = express();
 app.use(express.json());
 // import mysql, {
@@ -11,7 +11,45 @@ app.use(express.json());
 // } from "mysql2/promise";
 import { ZodError, z } from "zod";
 import * as R from "ramda";
-// import { PostData } from "./type";
+import jwt from "jsonwebtoken";
+const { sign, verify } = jwt;
+import { secret } from "./secret-key";
+import { authorization } from "./token-validation";
+
+type Validate = {
+  Email: string;
+  Password: string;
+};
+
+const validate = async (input: Validate) => {
+  return app.get("/api/v2/users", (req, res) => {
+    let user = prisma.user.findUnique({
+      where: {
+        Email: `${input.Email}`,
+        Password: `${input.Password}`,
+      },
+    });
+    res.send(user);
+  });
+};
+
+app.get("/api/v2/token", async (req, res) => {
+  const payload = {
+    Email: `${req.body.Email}`,
+    Password: `${req.body.Password}`,
+  };
+  let validUser = await validate(payload);
+  if (!validUser) {
+    res.sendStatus(404).send("user not found");
+  } else {
+    const token = jwt.sign(payload, secret.key, {
+      expiresIn: "1h",
+    });
+    //console.log(token);
+    res.send(token);
+  }
+});
+app.use(authorization());
 
 type EmailMandatory = {
   Email: string;
@@ -220,6 +258,7 @@ app.post("/api/v2/users", async (req, res) => {
     let body = z.object({
       Email: z.string(),
       Name: z.string(),
+      Password: z.string(),
     });
     let data = body.parse(req.body);
     const newUser = await prisma.user.create({
