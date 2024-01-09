@@ -12,42 +12,20 @@ app.use(express.json());
 import { ZodError, z } from "zod";
 import * as R from "ramda";
 import jwt from "jsonwebtoken";
-const { sign, verify } = jwt;
+//const { sign, verify } = jwt;
 import { secret } from "./secret-key";
 import { authorization } from "./token-validation";
-
-type Validate = {
-  Email: string;
-  Password: string;
-};
-
-const validate = async (input: Validate) => {
-  return app.get("/api/v2/users", (req, res) => {
-    let user = prisma.user.findUnique({
-      where: {
-        Email: `${input.Email}`,
-        Password: `${input.Password}`,
-      },
-    });
-    res.send(user);
-  });
-};
 
 app.get("/api/v2/token", async (req, res) => {
   const payload = {
     Email: `${req.body.Email}`,
     Password: `${req.body.Password}`,
   };
-  let validUser = await validate(payload);
-  if (!validUser) {
-    res.sendStatus(404).send("user not found");
-  } else {
-    const token = jwt.sign(payload, secret.key, {
-      expiresIn: "1h",
-    });
-    //console.log(token);
-    res.send(token);
-  }
+  const token = jwt.sign(payload, secret.key, {
+    expiresIn: "1h",
+  });
+  //console.log(token);
+  res.send(token);
 });
 app.use(authorization());
 

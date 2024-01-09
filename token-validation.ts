@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-const { sign, verify } = jwt;
+//const { sign, verify } = jwt;
 import { NextFunction, Request, Response } from "express";
 import { secret } from "./secret-key";
 
