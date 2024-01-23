@@ -1,49 +1,48 @@
-//import { strict } from "assert";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient(); // {log: ["query"]}
 import express, { NextFunction, Request, Response } from "express";
 const app = express();
 app.use(express.json());
-// import mysql, {
-//   FieldPacket,
-//   ResultSetHeader,
-//   RowDataPacket,
-// } from "mysql2/promise";
-import { ZodError, z } from "zod";
-import * as R from "ramda";
-import jwt from "jsonwebtoken";
-//const { sign, verify } = jwt;
-import { secret } from "./common/secret-key";
-import { authorization } from "./common/token-validation";
+import { authorization } from "./authentication/validation";
 import { tickets } from "./ticket/ticket-route";
 import { users } from "./user/user-route";
+import { token } from "./authentication/auth-operation";
+import { authentication } from "./authentication/auth-route";
 
-app.get("/api/v2/token", async (req, res) => {
-  //console.log("token api");
-  const payload = {
-    Email: `${req.body.Email}`,
-    Password: `${req.body.Password}`,
-  };
-  let user = await prisma.user.findUnique({
-    where: {
-      Email: payload.Email,
-    },
-  });
-  //console.log(user);
-  if (user?.Password === payload.Password) {
-    const token = jwt.sign(payload, secret.key, {
-      expiresIn: "1h",
-    });
-    //console.log(token);
-    res.send(token);
-  } else {
-    res.status(401).send("user not found");
-  }
-});
+app.use("/", authentication);
+
 app.use(authorization());
 
 app.use("/", tickets);
 
+app.use("/", users);
+
+app.listen(4000, () => {
+  console.log("I am running on 4000");
+});
+
+// app.get("/api/v2/token", async (req, res) => {
+//   //console.log("token api");
+//   const payload = {
+//     Email: `${req.body.Email}`,
+//     Password: `${req.body.Password}`,
+//   };
+//   let user = await prisma.user.findUnique({
+//     where: {
+//       Email: payload.Email,
+//     },
+//   });
+//   //console.log(user);
+//   if (user?.Password === payload.Password) {
+//     const token = jwt.sign(payload, secret.key, {
+//       expiresIn: "1h",
+//     });
+//     //console.log(token);
+//     res.send(token);
+//   } else {
+//     res.status(401).send("user not found");
+//   }
+// });
 // type EmailMandatory = {
 //   Email: string;
 //   Status?: "Open" | "progress" | "Hold" | "Closed";
@@ -270,7 +269,3 @@ app.use("/", tickets);
 //     }
 //   }
 // });
-
-app.listen(4000, () => {
-  console.log("I am running on 4000");
-});

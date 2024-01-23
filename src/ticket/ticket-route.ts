@@ -38,3 +38,12 @@ tickets.put("/:id", async (req: Request, res: Response) => {
     res.status(200).send(updatedT);
   }
 });
+
+tickets.search("/search", async (req: Request, res: Response) => {
+  let ticket = await TOS.searchTicket(req.query);
+  if (!ticket) {
+    res.status(400).send("Ticket not found");
+  } else {
+    res.status(200).send(ticket);
+  }
+});

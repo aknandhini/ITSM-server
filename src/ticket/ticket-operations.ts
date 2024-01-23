@@ -1,11 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import express from "express";
 import * as R from "ramda";
 import { z, ZodError } from "zod";
-import { PostData, PutData } from "../common/type";
+import { PostData, PutData, QueryInputs, Param } from "../common/type";
+import { ticketSchema, searchSchema } from "../common/input-validation";
+import { getTicketsByEmailAndStatus } from "../common/utils";
 const prisma = new PrismaClient();
-//const app = express();
-//app.use(express.json());
 
 export const getTickets = async () => {
   let tickets = await prisma.tickets.findMany();
@@ -30,19 +29,7 @@ export const getTicketById = async (id: string) => {
 };
 export const createTicket = async (input: PostData) => {
   try {
-    const Svalues = ["Open", "progress", "Hold", "Closed"] as const;
-    const Pvalues = ["Low", "Medium", "High"] as const;
-    const Tvalues = ["Ticket", "Problem", "Question"] as const;
-    let body = z.object({
-      Description: z.string().optional(),
-      Subject: z.string(),
-      Status: z.enum(Svalues).optional(),
-      Priority: z.enum(Pvalues).optional(),
-      Type: z.enum(Tvalues).optional(),
-      Notes: z.string().optional(),
-      Assigned_to: z.string().email(),
-    });
-    let data = body.parse(input);
+    let data = ticketSchema.parse(input);
     let body_data = R.omit(["Assigned_to"], data);
     const newTicket = await prisma.tickets.create({
       data: {
@@ -75,19 +62,7 @@ export const deleteTicket = async (id: string) => {
 };
 export const updateTicket = async (id: string, bodyData: PutData) => {
   try {
-    const Svalues = ["Open", "progress", "Hold", "Closed"] as const;
-    const Pvalues = ["Low", "Medium", "High"] as const;
-    const Tvalues = ["Ticket", "Problem", "Question"] as const;
-    let body = z.object({
-      Description: z.string().optional(),
-      Subject: z.string().optional(),
-      Status: z.enum(Svalues).optional(),
-      Priority: z.enum(Pvalues).optional(),
-      Type: z.enum(Tvalues).optional(),
-      Notes: z.string().optional(),
-      Assigned_to: z.string().email().optional(),
-    });
-    let data = body.parse(bodyData);
+    let data = ticketSchema.parse(bodyData);
     //console.log("d:::::;", data);
     let update_body = R.omit(["Assigned_to"], data);
     let updatedTicket = await prisma.tickets.update({
@@ -105,6 +80,19 @@ export const updateTicket = async (id: string, bodyData: PutData) => {
     });
     //console.log("re:::::", updatedTicket);
     return updatedTicket;
+  } catch (err) {
+    console.log("er::::", err);
+    if (err instanceof ZodError) {
+      return "Invalid Input";
+    }
+    throw err;
+  }
+};
+export const searchTicket = async (input: Param) => {
+  let squery = searchSchema.parse(input);
+  try {
+    const filtered_tickets = await getTicketsByEmailAndStatus(squery);
+    return filtered_tickets;
   } catch (err) {
     console.log("er::::", err);
     if (err instanceof ZodError) {

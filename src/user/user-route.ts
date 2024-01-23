@@ -7,3 +7,12 @@ users.get("/users", async (req: Request, res: Response) => {
   let responses = await UOS.getUsers();
   res.status(200).send(responses);
 });
+
+users.post("/users", async (req: Request, res: Response) => {
+  let user = await UOS.createUser(req.body);
+  if (!user) {
+    res.status(400).send("Invalid Input");
+  } else {
+    res.status(200).send(user);
+  }
+});
