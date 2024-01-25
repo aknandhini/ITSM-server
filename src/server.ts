@@ -13,9 +13,9 @@ app.use("/", authentication);
 
 app.use(authorization());
 
-app.use("/", tickets);
+app.use("/tickets", tickets);
 
-app.use("/", users);
+app.use("/users", users);
 
 app.listen(4000, () => {
   console.log("I am running on 4000");

@@ -2,7 +2,8 @@ import express, { NextFunction, Request, Response } from "express";
 import * as TOS from "./ticket-operations";
 export const tickets = express.Router();
 
-tickets.get("/tickets", async (req: Request, res: Response) => {
+tickets.get("/", async (req: Request, res: Response) => {
+  console.log("req:::", req);
   //console.log("i am calling");
   let responses = await TOS.getTickets();
   res.status(200).send(responses);
@@ -18,7 +19,7 @@ tickets.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
-tickets.post("/tickets", async (req: Request, res: Response) => {
+tickets.post("/", async (req: Request, res: Response) => {
   let newT = await TOS.createTicket(req.body);
   if (!newT) {
     res.status(400).send("Invalid Inputs");
