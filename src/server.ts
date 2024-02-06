@@ -6,7 +6,6 @@ app.use(express.json());
 import { authorization } from "./authentication/validation";
 import { tickets } from "./ticket/ticket-route";
 import { users } from "./user/user-route";
-import { token } from "./authentication/auth-operation";
 import { authentication } from "./authentication/auth-route";
 
 app.use("/", authentication);

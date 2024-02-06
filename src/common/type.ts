@@ -59,3 +59,12 @@ export type auth = {
   Email: string;
   Password: string;
 };
+
+export type PageNumberMandatory = {
+  pageNumber: string;
+};
+export type NoMandatoryP = {
+  pageNumber?: string;
+};
+
+export type page = PageNumberMandatory | NoMandatoryP;

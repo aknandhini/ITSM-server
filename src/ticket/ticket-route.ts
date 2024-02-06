@@ -3,9 +3,7 @@ import * as TOS from "./ticket-operations";
 export const tickets = express.Router();
 
 tickets.get("/", async (req: Request, res: Response) => {
-  console.log("req:::", req);
-  //console.log("i am calling");
-  let responses = await TOS.getTickets();
+  let responses = await TOS.getTickets(req.query);
   res.status(200).send(responses);
 });
 

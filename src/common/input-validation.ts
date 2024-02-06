@@ -24,3 +24,7 @@ export const searchSchema = z.object({
   Status: z.enum(Svalues).optional(),
   Email: z.string().email().optional(),
 });
+
+export const paginationSchema = z.object({
+  pageNumber: z.string().optional().default("1"),
+});

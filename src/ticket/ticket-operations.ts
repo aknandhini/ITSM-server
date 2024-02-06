@@ -1,13 +1,22 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import * as R from "ramda";
 import { z, ZodError } from "zod";
-import { PostData, PutData, QueryInputs, Param } from "../common/type";
-import { ticketSchema, searchSchema } from "../common/input-validation";
-import { getTicketsByEmailAndStatus } from "../common/utils";
+import { PostData, PutData, Param, page } from "../common/type";
+import {
+  ticketSchema,
+  searchSchema,
+  paginationSchema,
+} from "../common/input-validation";
+import { getTicketsByEmailAndStatus, pagination } from "../common/utils";
 const prisma = new PrismaClient();
 
-export const getTickets = async () => {
-  let tickets = await prisma.tickets.findMany();
+export const getTickets = async (input: page) => {
+  let query = paginationSchema.parse(input);
+  let page = pagination(query);
+  let tickets = await prisma.tickets.findMany({
+    skip: (page - 1) * 10,
+    take: 10,
+  });
   return tickets;
 };
 export const getTicketById = async (id: string) => {

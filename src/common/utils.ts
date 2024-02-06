@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { QueryInputs } from "./type";
+import { QueryInputs, page } from "./type";
 const prisma = new PrismaClient();
 
 export const getTicketsByEmailAndStatus = async (parameter: QueryInputs) => {
@@ -41,5 +41,14 @@ export const getTicketsByEmailAndStatus = async (parameter: QueryInputs) => {
   } else if (!parameter.Email && !parameter.Status) {
     const tickets = await prisma.tickets.findMany();
     return tickets;
+  }
+};
+
+export const pagination = (input: page) => {
+  if (input.pageNumber && input.pageNumber == "1") {
+    return parseInt(input.pageNumber);
+  } else {
+    let number = input.pageNumber ? parseInt(input.pageNumber) : 0;
+    return number;
   }
 };
