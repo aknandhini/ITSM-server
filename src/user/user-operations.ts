@@ -1,15 +1,17 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import express from "express";
-import * as R from "ramda";
 import { z, ZodError } from "zod";
-import { PostData, PutData, UserInput } from "../common/type";
+import { UserInput, page } from "../common/type";
 const prisma = new PrismaClient();
-import { userSchema } from "../common/input-validation";
-//const app = express();
-//app.use(express.json());
+import { paginationSchema, userSchema } from "../common/input-validation";
+import { pagination } from "../common/utils";
 
-export const getUsers = async () => {
-  let users = await prisma.user.findMany();
+export const getUsers = async (input: page) => {
+  let query = paginationSchema.parse(input);
+  let page = pagination(query.pageNumber);
+  let users = await prisma.user.findMany({
+    skip: (page - 1) * 10,
+    take: 10,
+  });
   return users;
 };
 export const createUser = async (input: UserInput) => {

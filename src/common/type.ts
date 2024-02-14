@@ -1,3 +1,6 @@
+import { strict } from "assert";
+import { string } from "zod";
+
 export type PostData = {
   Description: string;
   Subject: string;
@@ -60,11 +63,49 @@ export type auth = {
   Password: string;
 };
 
-export type PageNumberMandatory = {
+export type PageNumber = {
   pageNumber: string;
 };
-export type NoMandatoryP = {
+
+export type page = Partial<PageNumber>;
+
+export type AllQuery = {
   pageNumber?: string;
+  Status?: string;
+  Priority?: string;
+  Type?: string;
+  Email?: string;
+};
+export type EmailQuery = {
+  Assigned_user: {
+    is: {
+      Email: string;
+    };
+  };
 };
 
-export type page = PageNumberMandatory | NoMandatoryP;
+export type StatusQuery = {
+  Status: {
+    equals: string;
+  };
+};
+export type PriorityQuery = {
+  Priority: {
+    equals: string;
+  };
+};
+export type TypeQuery = {
+  Type: {
+    equals: string;
+  };
+};
+
+export type Pagination = {
+  skip: number;
+  take: number;
+};
+export type TicketWhereQuery = Partial<
+  EmailQuery & StatusQuery & PriorityQuery & TypeQuery
+>;
+
+export type TicketQuery = { where: TicketWhereQuery } & Pagination;

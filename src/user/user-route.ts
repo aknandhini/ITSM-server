@@ -4,7 +4,7 @@ export const users = express.Router();
 
 users.get("/", async (req: Request, res: Response) => {
   //console.log("i am calling");
-  let responses = await UOS.getUsers();
+  let responses = await UOS.getUsers(req.query);
   res.status(200).send(responses);
 });
 

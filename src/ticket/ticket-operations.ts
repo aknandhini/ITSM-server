@@ -1,18 +1,18 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import * as R from "ramda";
 import { z, ZodError } from "zod";
-import { PostData, PutData, Param, page } from "../common/type";
+import { PostData, PutData, page, AllQuery } from "../common/type";
 import {
   ticketSchema,
-  searchSchema,
   paginationSchema,
+  TicketQuerySchema,
 } from "../common/input-validation";
-import { getTicketsByEmailAndStatus, pagination } from "../common/utils";
+import { pagination, searchTicketQuery } from "../common/utils";
 const prisma = new PrismaClient();
 
 export const getTickets = async (input: page) => {
   let query = paginationSchema.parse(input);
-  let page = pagination(query);
+  let page = pagination(query.pageNumber);
   let tickets = await prisma.tickets.findMany({
     skip: (page - 1) * 10,
     take: 10,
@@ -97,10 +97,15 @@ export const updateTicket = async (id: string, bodyData: PutData) => {
     throw err;
   }
 };
-export const searchTicket = async (input: Param) => {
-  let squery = searchSchema.parse(input);
+export const searchTicket = async (input: AllQuery) => {
+  //console.log("innn::::", input);
+  let squery = TicketQuerySchema.parse(input);
+  let finalQuery = searchTicketQuery(squery);
+  //console.log("kkkk", JSON.stringify(finalQuery));
   try {
-    const filtered_tickets = await getTicketsByEmailAndStatus(squery);
+    const filtered_tickets = await prisma.tickets.findMany(
+      finalQuery as unknown as any // type needed - doubt
+    );
     return filtered_tickets;
   } catch (err) {
     console.log("er::::", err);

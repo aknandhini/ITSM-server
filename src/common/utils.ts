@@ -1,54 +1,55 @@
 import { PrismaClient } from "@prisma/client";
-import { QueryInputs, page } from "./type";
+import {
+  AllQuery,
+  QueryInputs,
+  TicketQuery,
+  TicketWhereQuery,
+  page,
+} from "./type";
+import * as R from "ramda";
+import { z } from "zod";
+import { TicketQuerySchema } from "./input-validation";
 const prisma = new PrismaClient();
 
-export const getTicketsByEmailAndStatus = async (parameter: QueryInputs) => {
-  //console.log("quer::::", parameter);
-  if (parameter.Email && parameter.Status) {
-    const ticket = await prisma.tickets.findMany({
-      where: {
-        Status: {
-          equals: `${parameter.Status}`,
-        },
-        Assigned_user: {
-          is: {
-            Email: `${parameter.Email}`,
-          },
-        },
-      },
-    });
-    return ticket;
-  } else if (!parameter.Email && parameter.Status) {
-    const ticket = await prisma.tickets.findMany({
-      where: {
-        Status: {
-          equals: `${parameter.Status}`,
-        },
-      },
-    });
-    return ticket;
-  } else if (parameter.Email && !parameter.Status) {
-    const ticket = await prisma.tickets.findMany({
-      where: {
-        Assigned_user: {
-          is: {
-            Email: `${parameter.Email}`,
-          },
-        },
-      },
-    });
-    return ticket;
-  } else if (!parameter.Email && !parameter.Status) {
-    const tickets = await prisma.tickets.findMany();
-    return tickets;
+export const pagination = (pageNumber: string) => {
+  if (pageNumber && pageNumber == "1") {
+    return parseInt(pageNumber);
+  } else {
+    let number = pageNumber ? parseInt(pageNumber) : 0;
+    return number;
   }
 };
 
-export const pagination = (input: page) => {
-  if (input.pageNumber && input.pageNumber == "1") {
-    return parseInt(input.pageNumber);
-  } else {
-    let number = input.pageNumber ? parseInt(input.pageNumber) : 0;
-    return number;
+export const searchTicketQuery = (
+  input: z.infer<typeof TicketQuerySchema>
+): TicketQuery => {
+  let query: TicketWhereQuery = {};
+  if (input.Email) {
+    query.Assigned_user = {
+      is: {
+        Email: input.Email,
+      },
+    };
   }
+  if (input.Status) {
+    query.Status = {
+      equals: input.Status,
+    };
+  }
+  if (input.Priority) {
+    query.Priority = {
+      equals: input.Priority,
+    };
+  }
+  if (input.Type) {
+    query.Type = {
+      equals: input.Type,
+    };
+  }
+  let page = pagination(input.pageNumber);
+  return {
+    where: query,
+    skip: (page - 1) * 10,
+    take: 10,
+  };
 };

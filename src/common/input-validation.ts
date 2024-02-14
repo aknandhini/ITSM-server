@@ -1,3 +1,4 @@
+import { strict } from "assert";
 import { z, ZodError } from "zod";
 
 export const userSchema = z.object({
@@ -27,4 +28,12 @@ export const searchSchema = z.object({
 
 export const paginationSchema = z.object({
   pageNumber: z.string().optional().default("1"),
+});
+
+export const TicketQuerySchema = z.object({
+  pageNumber: z.string().optional().default("1"),
+  Status: z.enum(Svalues).optional(),
+  Priority: z.enum(Pvalues).optional(),
+  Type: z.enum(Tvalues).optional(),
+  Email: z.string().email().optional(),
 });
