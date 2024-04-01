@@ -7,7 +7,7 @@ export const userSchema = z.object({
   Password: z.string(),
 });
 
-const Svalues = ["Open", "progress", "Hold", "Closed"] as const;
+export const Svalues = ["Open", "progress", "Hold", "Closed"] as const;
 const Pvalues = ["Low", "Medium", "High"] as const;
 const Tvalues = ["Ticket", "Problem", "Question"] as const;
 
@@ -36,4 +36,14 @@ export const TicketQuerySchema = z.object({
   Priority: z.enum(Pvalues).optional(),
   Type: z.enum(Tvalues).optional(),
   Email: z.string().email().optional(),
+});
+
+export const CreateTeamSchema = z.object({
+  Name: z.string(),
+  Email: z.string().email().optional(),
+});
+
+export const AddUsertoTeam = z.object({
+  UserId: z.number(),
+  TeamId: z.number(),
 });

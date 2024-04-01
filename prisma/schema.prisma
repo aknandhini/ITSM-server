@@ -14,6 +14,7 @@ model User {
   Created_at DateTime  @default(now()) @db.Timestamp(0)
   Password   String    @unique @db.VarChar(255)
   Tickets    Tickets[]
+  Teams      Team[]
 }
 
 model Tickets {
@@ -28,6 +29,15 @@ model Tickets {
   Notes         String?                 @db.VarChar(255)
   Assigned_to   Int
   Assigned_user User                    @relation(fields: [Assigned_to], references: [Id])
+}
+
+model Team {
+  Id         Int       @id @default(autoincrement())
+  Email      String?   @unique @db.VarChar(255)
+  Name       String    @db.VarChar(255)
+  User       User[]
+  Created_at DateTime  @default(now()) @db.Timestamp(0)
+  Updated_at DateTime? @default(now()) @db.DateTime(0)
 }
 
 enum ticket_table_2_Status {

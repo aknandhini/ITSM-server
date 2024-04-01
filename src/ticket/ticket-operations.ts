@@ -104,7 +104,7 @@ export const searchTicket = async (input: AllQuery) => {
   //console.log("kkkk", JSON.stringify(finalQuery));
   try {
     const filtered_tickets = await prisma.tickets.findMany(
-      finalQuery as unknown as any // type needed - doubt
+      finalQuery // type needed - doubt
     );
     return filtered_tickets;
   } catch (err) {

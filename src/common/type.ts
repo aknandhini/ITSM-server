@@ -1,5 +1,7 @@
+import { $Enums } from "@prisma/client";
 import { strict } from "assert";
-import { string } from "zod";
+import { number, string, z } from "zod";
+import { Svalues } from "./input-validation";
 
 export type PostData = {
   Description: string;
@@ -84,19 +86,21 @@ export type EmailQuery = {
   };
 };
 
+const s = z.enum(Svalues);
+
 export type StatusQuery = {
   Status: {
-    equals: string;
+    equals: z.infer<typeof s>;
   };
 };
 export type PriorityQuery = {
   Priority: {
-    equals: string;
+    equals: $Enums.ticket_table_2_Priority;
   };
 };
 export type TypeQuery = {
   Type: {
-    equals: string;
+    equals: $Enums.ticket_table_2_Type;
   };
 };
 
@@ -109,3 +113,13 @@ export type TicketWhereQuery = Partial<
 >;
 
 export type TicketQuery = { where: TicketWhereQuery } & Pagination;
+
+export type CreateTeam = {
+  Name: string;
+  Email?: string;
+};
+
+export type AddMembers = {
+  userId: number;
+  teamId: number;
+};
