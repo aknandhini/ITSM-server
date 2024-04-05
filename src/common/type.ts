@@ -60,6 +60,10 @@ export type UserInput = {
   Password: string;
 };
 
+export type deleteUserIn = {
+  Email: string;
+};
+
 export type auth = {
   Email: string;
   Password: string;
@@ -120,6 +124,6 @@ export type CreateTeam = {
 };
 
 export type AddMembers = {
-  userId: number;
-  teamId: number;
+  UserEmail: string;
+  TeamId: number;
 };

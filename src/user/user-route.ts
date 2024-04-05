@@ -16,3 +16,12 @@ users.post("/", async (req: Request, res: Response) => {
     res.status(200).send(user);
   }
 });
+
+users.delete("/", async (req: Request, res: Response) => {
+  let deletedUser = await UOS.deleteUser(req.body);
+  if (!deletedUser) {
+    res.status(400).send("Invalid Input");
+  } else {
+    res.status(200).send(deletedUser);
+  }
+});

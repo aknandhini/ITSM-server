@@ -1,5 +1,6 @@
 import { strict } from "assert";
-import { z, ZodError } from "zod";
+import { z, ZodError, ZodIssueCode } from "zod";
+import { isTeamIdExist, isUserExist } from "./utils";
 
 export const userSchema = z.object({
   Email: z.string(),
@@ -7,6 +8,9 @@ export const userSchema = z.object({
   Password: z.string(),
 });
 
+export const delUser = z.object({
+  Email: z.string(),
+});
 export const Svalues = ["Open", "progress", "Hold", "Closed"] as const;
 const Pvalues = ["Low", "Medium", "High"] as const;
 const Tvalues = ["Ticket", "Problem", "Question"] as const;
@@ -44,6 +48,39 @@ export const CreateTeamSchema = z.object({
 });
 
 export const AddUsertoTeam = z.object({
-  UserId: z.number(),
-  TeamId: z.number(),
+  UserEmail: z
+    .string()
+    .email()
+    .superRefine(async (userId, ctx) => {
+      try {
+        if (!(await isUserExist(userId))) {
+          ctx.addIssue({
+            code: ZodIssueCode.custom,
+            message: "user doestn't exist",
+          });
+        }
+      } catch (err) {
+        ctx.addIssue({
+          code: ZodIssueCode.custom,
+          params: { err: "DBError" },
+          message: "Something went wrong while fetching DB",
+        });
+      }
+    }),
+  TeamId: z.number().superRefine(async (teamId, ctx) => {
+    try {
+      if (!(await isTeamIdExist(teamId))) {
+        ctx.addIssue({
+          code: ZodIssueCode.custom,
+          message: "team doestn't exist",
+        });
+      }
+    } catch (err) {
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        params: { err: "DBError" },
+        message: "Something went wrong while fetching DB",
+      });
+    }
+  }),
 });

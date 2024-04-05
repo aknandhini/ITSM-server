@@ -20,6 +20,11 @@ export const pagination = (pageNumber: string) => {
   }
 };
 
+const validEmailFormat =
+  /^(\s?[^\s,]+@[^\s,]+\.[^\s,]+\s?,)*(\s?[^\s,]+@[^\s,]+\.[^\s,]+)$/;
+
+export const hasValidEmail = (email: string) => validEmailFormat.test(email);
+
 export const searchTicketQuery = (
   input: z.infer<typeof TicketQuerySchema>
 ): TicketQuery => {
@@ -52,4 +57,18 @@ export const searchTicketQuery = (
     skip: (page - 1) * 10,
     take: 10,
   };
+};
+
+export const isTeamIdExist = async (teamId: number) => {
+  let result = await prisma.team.findUnique({
+    where: { Id: teamId },
+  });
+  return result !== null;
+};
+
+export const isUserExist = async (user: string) => {
+  let result = await prisma.user.findUnique({
+    where: { Email: `${user}` },
+  });
+  return result !== null;
 };

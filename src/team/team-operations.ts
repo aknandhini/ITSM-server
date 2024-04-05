@@ -1,13 +1,13 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import * as R from "ramda";
-import { z, ZodError } from "zod";
+import { unknown, z, ZodError } from "zod";
 import { AddMembers, CreateTeam, page } from "../common/type";
 import {
   AddUsertoTeam,
   CreateTeamSchema,
   paginationSchema,
 } from "../common/input-validation";
-import { pagination } from "../common/utils";
+import { hasValidEmail, pagination } from "../common/utils";
 const prisma = new PrismaClient();
 
 export const createTeam = async (input: CreateTeam) => {
@@ -16,7 +16,7 @@ export const createTeam = async (input: CreateTeam) => {
     const newTeam = await prisma.team.create({
       data: { ...data },
     });
-    return newTeam;
+    return { message: "Team Created", data: newTeam };
   } catch (err) {
     console.log("e:::", err);
     if (err instanceof ZodError) {
@@ -31,32 +31,41 @@ export const getTeam = async (input: page) => {
   let query = paginationSchema.parse(input);
   let page = pagination(query.pageNumber);
   let teams = await prisma.team.findMany({
+    include: {
+      User: true,
+    },
     skip: (page - 1) * 10,
     take: 10,
   });
-  return teams;
+  return { data: teams };
 };
 
 export const addMembersToTeam = async (input: AddMembers) => {
   try {
-    let data = AddUsertoTeam.parse(input);
+    let data = await AddUsertoTeam.parseAsync(input);
+    console.log("ddd", data);
+
     const member = await prisma.team.update({
       where: { Id: data.TeamId },
       data: {
-        User: { connect: { Id: data.UserId } },
+        User: { connect: { Email: data.UserEmail } },
       },
     });
-    const userDetail = await prisma.user.findUnique({
-      where: { Id: data.UserId },
+    let users = await prisma.user.findUnique({
+      where: { Email: data.UserEmail },
     });
-    let output = { ...member, member: userDetail };
+
+    let output = {
+      message: "Member Added",
+      data: { ...member, member: users },
+    };
     return output;
-  } catch (err) {
+  } catch (err: any) {
     console.log("e:::", err);
     if (err instanceof ZodError) {
-      return "Invalid Input";
+      throw { type: "ZodError", error: err };
     } else {
-      throw new Error("User not Added");
+      throw { type: "unknown" };
     }
   }
 };
@@ -67,13 +76,13 @@ export const removeMembersToTeam = async (input: AddMembers) => {
     const member = await prisma.team.update({
       where: { Id: data.TeamId },
       data: {
-        User: { disconnect: { Id: data.UserId } },
+        User: { disconnect: { Email: data.UserEmail } },
       },
     });
     const userDetail = await prisma.user.findUnique({
-      where: { Id: data.UserId },
+      where: { Email: data.UserEmail },
     });
-    let output = { ...userDetail };
+    let output = { message: "Member Removed", data: userDetail };
     return output;
   } catch (err) {
     console.log("e:::", err);
