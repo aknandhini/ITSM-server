@@ -1,7 +1,9 @@
 import { $Enums } from "@prisma/client";
 import { strict } from "assert";
-import { number, string, z } from "zod";
+import { ZodError, number, string, z } from "zod";
 import { Svalues } from "./input-validation";
+import { CustomError } from "ts-custom-error";
+import { Result } from "@badrap/result";
 
 export type PostData = {
   Description: string;
@@ -127,3 +129,36 @@ export type AddMembers = {
   UserEmail: string;
   TeamId: number;
 };
+export type Success = {
+  message: string;
+  data: {
+    Id: number;
+    Email: string | null;
+    Name: string;
+    Created_at: Date;
+    Updated_at: Date | null;
+  };
+};
+export type ResultResponse<Data, ClientError, ServerError = any> =
+  | { status: 200; data: Data }
+  | { status: 400; data: ClientError }
+  | { status: 500; data: ServerError };
+export type CreateTeamResponse = ResultResponse<any, ZodError>;
+
+export class DbError extends CustomError {
+  public error = "DB_ERROR" as const;
+  public constructor(message?: string) {
+    super(message);
+  }
+}
+
+export class UniqueConstraineErr extends CustomError {
+  public error = "UNIQUE_CONTRAINT_ERR" as const;
+  public constructor(message?: string) {
+    super(message);
+  }
+}
+
+export type CreateTeamOp = Promise<
+  Result<Success, UniqueConstraineErr | DbError | ZodError>
+>;

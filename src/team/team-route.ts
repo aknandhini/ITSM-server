@@ -2,6 +2,9 @@ import express, { NextFunction, Request, Response } from "express";
 import * as TMOS from "./team-operations";
 import { ZodError } from "zod";
 export const teams = express.Router();
+import { Result } from "@badrap/result";
+import { CreateTeamResponse } from "../common/type";
+import { CustomError } from "ts-custom-error";
 
 teams.get("/", async (req: Request, res: Response) => {
   let responses = await TMOS.getTeam(req.query);
@@ -9,11 +12,30 @@ teams.get("/", async (req: Request, res: Response) => {
 });
 
 teams.post("/", async (req: Request, res: Response) => {
-  let newTeam = await TMOS.createTeam(req.body);
-  if (!newTeam) {
-    res.status(400).send("Invalid Inputs");
-  } else {
-    res.status(200).send(newTeam);
+  try {
+    let newTeam = await TMOS.createTeam(req.body);
+    // if (newTeam.isOk) {
+    //   res.status(200).send(newTeam);
+    // } else if (newTeam.isErr) {
+    //   res.status(400).send(newTeam);
+    // }
+    newTeam
+      .chain<CreateTeamResponse, never>(
+        (data) => Result.ok({ status: 200, data }),
+        (err) => {
+          console.log("ooo::", err);
+          if (err instanceof ZodError) {
+            return Result.ok({ status: 400, data: err });
+          }
+          return Result.ok({
+            status: 500,
+            data: { message: err.message },
+          });
+        }
+      )
+      .map((x) => res.status(x.status).send(x.data));
+  } catch (err) {
+    res.status(500).send(err);
   }
 });
 

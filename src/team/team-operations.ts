@@ -1,29 +1,44 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import * as R from "ramda";
-import { unknown, z, ZodError } from "zod";
-import { AddMembers, CreateTeam, page } from "../common/type";
+import { z, ZodError } from "zod";
+import {
+  AddMembers,
+  CreateTeam,
+  CreateTeamOp,
+  DbError,
+  Success,
+  UniqueConstraineErr,
+  page,
+} from "../common/type";
 import {
   AddUsertoTeam,
   CreateTeamSchema,
   paginationSchema,
 } from "../common/input-validation";
-import { hasValidEmail, pagination } from "../common/utils";
+import { pagination } from "../common/utils";
 const prisma = new PrismaClient();
+import { Result } from "@badrap/result";
+import { CustomError } from "ts-custom-error";
 
-export const createTeam = async (input: CreateTeam) => {
+export const createTeam = async (input: CreateTeam): CreateTeamOp => {
   try {
     let data = CreateTeamSchema.parse(input);
     const newTeam = await prisma.team.create({
       data: { ...data },
     });
-    return { message: "Team Created", data: newTeam };
+    return Result.ok({ message: "Team Created", data: newTeam });
   } catch (err) {
     console.log("e:::", err);
     if (err instanceof ZodError) {
-      return "Invalid Input";
-    } else {
-      throw new Error("Team not Created");
+      return Result.err(err);
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2002") {
+        return Result.err(
+          new UniqueConstraineErr("Provided Email ID is already exixts in Team")
+        );
+      }
     }
+    return Result.err(new DbError("Unknown DbError"));
   }
 };
 
@@ -37,7 +52,7 @@ export const getTeam = async (input: page) => {
     skip: (page - 1) * 10,
     take: 10,
   });
-  return { data: teams };
+  return Result.ok({ data: teams });
 };
 
 export const addMembersToTeam = async (input: AddMembers) => {
@@ -63,9 +78,9 @@ export const addMembersToTeam = async (input: AddMembers) => {
   } catch (err: any) {
     console.log("e:::", err);
     if (err instanceof ZodError) {
-      throw { type: "ZodError", error: err };
+      return { type: "ZodError", error: err };
     } else {
-      throw { type: "unknown" };
+      return { type: "unknown" };
     }
   }
 };
